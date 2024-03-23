@@ -42,13 +42,6 @@ return require('packer').startup(function(use)
     end
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
-  use {
-  "zbirenbaum/copilot-cmp",
-  after = { "copilot.lua" },
-  config = function ()
-    require("copilot_cmp").setup()
-  end
-  }
   -- My plugins here
   -- use 'foo1/bar1.nvim'
   -- use 'foo2/bar2.nvim'
