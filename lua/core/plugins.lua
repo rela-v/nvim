@@ -42,6 +42,7 @@ return require('packer').startup(function(use)
     end
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
+  use {'github/copilot.vim', branch = 'release' }
   -- My plugins here
   -- use 'foo1/bar1.nvim'
   -- use 'foo2/bar2.nvim'
