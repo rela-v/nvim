@@ -19,6 +19,7 @@ return require('packer').startup(function(use)
   use 'nvim-lualine/lualine.nvim'
   use 'jalvesaq/Nvim-R'
   use 'nvim-treesitter/nvim-treesitter'
+  use 'mfussenegger/nvim-dap'
   use {
     'williamboman/mason.nvim',
     'williamboman/mason-lspconfig.nvim',
@@ -28,6 +29,12 @@ return require('packer').startup(function(use)
     'nvim-telescope/telescope.nvim',
     tag = '0.1.5',
     requires = { { 'nvim-lua/plenary.nvim'} }
+  }
+  use "nvim-lua/plenary.nvim" -- don't forget to add this one if you don't have it yet!
+  use {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    requires = { {"nvim-lua/plenary.nvim"} }
   }
   use {
     'wthollingsworth/pomodoro.nvim',
@@ -42,7 +49,6 @@ return require('packer').startup(function(use)
     end
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
-  use {'github/copilot.vim', branch = 'release' }
   -- My plugins here
   -- use 'foo1/bar1.nvim'
   -- use 'foo2/bar2.nvim'
