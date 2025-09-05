@@ -14,22 +14,32 @@ local packer_bootstrap = ensure_packer()
 return require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
   use { "catppuccin/nvim", as = "catppuccin" }
-  use 'nvim-tree/nvim-tree.lua'
+use {
+  'nvim-tree/nvim-tree.lua',
+  requires = {
+    'nvim-tree/nvim-web-devicons', -- optional, but recommended
+  },
+  config = function()
+    require('nvim-tree').setup({
+      -- Add these two lines to your existing setup
+      hijack_netrw = false,
+      disable_netrw = false,
+      -- ... other settings ...
+    })
+  end
+}
   use 'nvim-tree/nvim-web-devicons'
   use 'nvim-lualine/lualine.nvim'
-  use 'jalvesaq/Nvim-R'
   use 'nvim-treesitter/nvim-treesitter'
-  use 'mfussenegger/nvim-dap'
   use {
     'williamboman/mason.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'neovim/nvim-lspconfig',
   }
   use {
     'nvim-telescope/telescope.nvim',
     tag = '0.1.5',
     requires = { { 'nvim-lua/plenary.nvim'} }
   }
+  use 'jalvesaq/Nvim-R'
   use "nvim-lua/plenary.nvim" -- don't forget to add this one if you don't have it yet!
   use {
     "ThePrimeagen/harpoon",
@@ -49,6 +59,37 @@ return require('packer').startup(function(use)
     end
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
+  use {
+  "~/.config/nvim/lua/note_plugin/",
+  config = function()
+    require("note_plugin").setup({
+      api_key = "your-api-key",
+      base_url = "http://localhost:8080/notes"
+    })
+
+    -- Safe keybindings with a unique namespace (nn = note plugin)
+    local map = vim.keymap.set
+    local note = require("note_plugin")
+
+    -- Create a new note buffer
+map("n", "<leader>nn", note.create_note, { desc = "Create Note" })
+
+-- List and view notes using vim.ui.select
+map("n", "<leader>nl", note.list_notes, { desc = "List Notes (vim.ui.select)" })
+
+-- View a specific note by ID (prompts for ID)
+map("n", "<leader>nv", note.view_note, { desc = "View Note by ID" })
+
+-- Delete a note using a Telescope picker
+map("n", "<leader>nd", note.delete_note, { desc = "Delete Note (Telescope)" })
+
+-- Update an existing note using a Telescope picker
+map("n", "<leader>nu", note.update_note, { desc = "Update Note (Telescope)" })
+
+-- Find notes by tag (prompts for tag)
+map("n", "<leader>nt", note.notes_by_tag, { desc = "Notes by Tag" })
+  end
+}
   -- My plugins here
   -- use 'foo1/bar1.nvim'
   -- use 'foo2/bar2.nvim'
