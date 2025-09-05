@@ -5,8 +5,8 @@ local M = {}
 
 -- Configuration
 local config = {
-    API_KEY = "secret",
-    base_url = "http://localhost:8080/notes"
+    API_KEY = os.getenv("NOTES_API_KEY"),
+    base_url = os.getenv("NOTES_API_URL")
 }
 
 -- Utility: Send a request

@@ -146,10 +146,6 @@ return require('packer').startup(function(use)
     "~/.config/nvim/lua/note_plugin/",
     config = function()
       local note = require("note_plugin")
-      note.setup({
-        api_key = "your-api-key",
-        base_url = "http://localhost:8080/notes"
-      })
 
       local map = vim.keymap.set
       map("n", "<leader>nn", note.create_note, { desc = "Create Note" })
