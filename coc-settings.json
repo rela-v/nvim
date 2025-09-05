@@ -6,5 +6,6 @@
       "filetypes": ["r"],
       "rootPatterns": [".git/", ".Rproj.user/", "DESCRIPTION"]
     }
-  }
+  },
+  "snippets.ultisnips.pythonPrompt": false
 }

@@ -2,6 +2,7 @@ require("core.plugins")
 require("core.plugin_config")
 require('core.rg_replace')
 
+vim.g.loaded_python3_provider = 0
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.shiftround = true

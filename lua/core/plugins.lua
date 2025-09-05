@@ -15,6 +15,12 @@ local packer_bootstrap = ensure_packer()
 -- Plugin setup
 return require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
+  use {
+  	'numToStr/Comment.nvim',
+  	config = function()
+    	require("Comment").setup()
+  	end
+	}
 
   -- Theme
   use { "catppuccin/nvim", as = "catppuccin" }
