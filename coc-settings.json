@@ -1,0 +1,10 @@
+{
+  "languageserver": {
+    "r": {
+      "command": "/usr/local/bin/R",
+      "args": ["--slave", "-e", "languageserver::run()"],
+      "filetypes": ["r"],
+      "rootPatterns": [".git/", ".Rproj.user/", "DESCRIPTION"]
+    }
+  }
+}

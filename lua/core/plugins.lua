@@ -17,14 +17,65 @@ return require('packer').startup(function(use)
   use 'nvim-tree/nvim-tree.lua'
   use 'nvim-tree/nvim-web-devicons'
   use 'nvim-lualine/lualine.nvim'
-  use 'jalvesaq/Nvim-R'
-  use 'nvim-treesitter/nvim-treesitter'
-  use 'mfussenegger/nvim-dap'
+  use { "nvim-neotest/nvim-nio" }
   use {
-    'williamboman/mason.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'neovim/nvim-lspconfig',
-  }
+        "R-nvim/R.nvim",
+        config = function()
+            local opts = {
+                hook = {
+                    on_filetype = function()
+                        vim.api.nvim_buf_set_keymap(0, "n", "<Enter>", "<Plug>RDSendLine", {})
+                        vim.api.nvim_buf_set_keymap(0, "v", "<Enter>", "<Plug>RSendSelection", {})
+                    end
+                },
+                R_args = {"--quiet", "--no-save"},
+                min_editor_width = 72,
+                rconsole_width = 78,
+                objbr_mappings = {
+                    c = 'class',
+                    ['<localleader>gg'] = 'head({object}, n = 15)',
+                    v = function()
+                        require('r.browser').toggle_view()
+                    end
+                },
+                disable_cmds = {
+                    "RClearConsole",
+                    "RCustomStart",
+                    "RSPlot",
+                    "RSaveClose",
+                },
+            }
+            if vim.env.R_AUTO_START == "true" then
+                opts.auto_start = "on startup"
+                opts.objbr_auto_start = true
+            end
+            require("r").setup(opts)
+        end,
+    }
+    use 'neovim/nvim-lspconfig'
+    use {
+        "R-nvim/cmp-r",
+        requires = {"hrsh7th/nvim-cmp"},
+        config = function()
+            require("cmp").setup({ sources = {{ name = "cmp_r" }}})
+            require("cmp_r").setup({})
+        end,
+    }
+
+    use {
+        "nvim-treesitter/nvim-treesitter",
+        run = function()
+            vim.cmd(":TSUpdate")
+        end,
+        config = function ()
+            require("nvim-treesitter.configs").setup({
+                ensure_installed = { "markdown", "markdown_inline", "r", "rnoweb", "yaml", "latex", "csv" },
+                highlight = { enable = true },
+            })
+        end
+    }
+  use 'mfussenegger/nvim-dap'
+  use {'Vigemus/iron.nvim'}
   use {
     'nvim-telescope/telescope.nvim',
     tag = '0.1.5',
@@ -36,6 +87,7 @@ return require('packer').startup(function(use)
     branch = "harpoon2",
     requires = { {"nvim-lua/plenary.nvim"} }
   }
+  use 'rcarriga/nvim-notify'
   use {
     'wthollingsworth/pomodoro.nvim',
     requires = 'MunifTanjim/nui.nvim',
@@ -49,6 +101,29 @@ return require('packer').startup(function(use)
     end
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
+  use {
+  'rcarriga/nvim-dap-ui',   -- UI for DAP
+  requires = {'mfussenegger/nvim-dap'},
+  config = function()
+    require("dapui").setup()
+  end
+  }
+  use({
+    'MeanderingProgrammer/render-markdown.nvim',
+    after = { 'nvim-treesitter' },
+    requires = { 'echasnovski/mini.nvim', opt = true }, -- if you use the mini.nvim suite
+    -- requires = { 'echasnovski/mini.icons', opt = true }, -- if you use standalone mini plugins
+    -- requires = { 'nvim-tree/nvim-web-devicons', opt = true }, -- if you prefer nvim-web-devicons
+    config = function()
+        require('render-markdown').setup({})
+    end,
+  })
+  use {
+    'numToStr/Comment.nvim',
+    config = function()
+        require('Comment').setup()
+    end
+  }
   -- My plugins here
   -- use 'foo1/bar1.nvim'
   -- use 'foo2/bar2.nvim'

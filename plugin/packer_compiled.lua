@@ -49,8 +49,8 @@ local function save_profiles(threshold)
 end
 
 time([[Luarocks path setup]], true)
-local package_path_str = "/Users/rela/.cache/nvim/packer_hererocks/2.1.1703358377/share/lua/5.1/?.lua;/Users/rela/.cache/nvim/packer_hererocks/2.1.1703358377/share/lua/5.1/?/init.lua;/Users/rela/.cache/nvim/packer_hererocks/2.1.1703358377/lib/luarocks/rocks-5.1/?.lua;/Users/rela/.cache/nvim/packer_hererocks/2.1.1703358377/lib/luarocks/rocks-5.1/?/init.lua"
-local install_cpath_pattern = "/Users/rela/.cache/nvim/packer_hererocks/2.1.1703358377/lib/lua/5.1/?.so"
+local package_path_str = "/Users/jvergis/.cache/nvim/packer_hererocks/2.1.1741730670/share/lua/5.1/?.lua;/Users/jvergis/.cache/nvim/packer_hererocks/2.1.1741730670/share/lua/5.1/?/init.lua;/Users/jvergis/.cache/nvim/packer_hererocks/2.1.1741730670/lib/luarocks/rocks-5.1/?.lua;/Users/jvergis/.cache/nvim/packer_hererocks/2.1.1741730670/lib/luarocks/rocks-5.1/?/init.lua"
+local install_cpath_pattern = "/Users/jvergis/.cache/nvim/packer_hererocks/2.1.1741730670/lib/lua/5.1/?.so"
 if not string.find(package.path, package_path_str, 1, true) then
   package.path = package.path .. ';' .. package_path_str
 end
@@ -74,99 +74,173 @@ end
 time([[try_loadstring definition]], false)
 time([[Defining packer_plugins]], true)
 _G.packer_plugins = {
-  ["Nvim-R"] = {
+  ["Comment.nvim"] = {
+    config = { "\27LJ\2\n5\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\fComment\frequire\0" },
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/Nvim-R",
-    url = "https://github.com/jalvesaq/Nvim-R"
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/Comment.nvim",
+    url = "https://github.com/numToStr/Comment.nvim"
+  },
+  ["R.nvim"] = {
+    config = { "\27LJ\2\n¡\1\0\0\a\0\b\0\0196\0\0\0009\0\1\0009\0\2\0)\2\0\0'\3\3\0'\4\4\0'\5\5\0004\6\0\0B\0\6\0016\0\0\0009\0\1\0009\0\2\0)\2\0\0'\3\6\0'\4\4\0'\5\a\0004\6\0\0B\0\6\1K\0\1\0\25<Plug>RSendSelection\6v\21<Plug>RDSendLine\f<Enter>\6n\24nvim_buf_set_keymap\bapi\bvim=\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\16toggle_view\14r.browser\frequireã\3\1\0\4\0\23\0\0295\0\3\0005\1\1\0003\2\0\0=\2\2\1=\1\4\0005\1\5\0=\1\6\0005\1\a\0003\2\b\0=\2\t\1=\1\n\0005\1\v\0=\1\f\0006\1\r\0009\1\14\0019\1\15\1\a\1\16\0X\1\4€'\1\18\0=\1\17\0+\1\2\0=\1\19\0006\1\20\0'\3\21\0B\1\2\0029\1\22\1\18\3\0\0B\1\2\1K\0\1\0\nsetup\6r\frequire\21objbr_auto_start\15on startup\15auto_start\ttrue\17R_AUTO_START\benv\bvim\17disable_cmds\1\5\0\0\18RClearConsole\17RCustomStart\vRSPlot\15RSaveClose\19objbr_mappings\6v\0\1\0\3\20<localleader>gg\27head({object}, n = 15)\6v\0\6c\nclass\vR_args\1\3\0\0\f--quiet\14--no-save\thook\1\0\6\21min_editor_width\3H\17disable_cmds\0\vR_args\0\19objbr_mappings\0\19rconsole_width\3N\thook\0\16on_filetype\1\0\1\16on_filetype\0\0\0" },
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/R.nvim",
+    url = "https://github.com/R-nvim/R.nvim"
   },
   catppuccin = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/catppuccin",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/catppuccin",
     url = "https://github.com/catppuccin/nvim"
+  },
+  ["cmp-r"] = {
+    config = { "\27LJ\2\n…\1\0\0\5\0\a\0\0176\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\4\0004\3\3\0005\4\3\0>\4\1\3=\3\5\2B\0\2\0016\0\0\0'\2\6\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\ncmp_r\fsources\1\0\1\fsources\0\1\0\1\tname\ncmp_r\nsetup\bcmp\frequire\0" },
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/cmp-r",
+    url = "https://github.com/R-nvim/cmp-r"
   },
   ["coc.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/coc.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/coc.nvim",
     url = "https://github.com/neoclide/coc.nvim"
   },
   harpoon = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/harpoon",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/harpoon",
     url = "https://github.com/ThePrimeagen/harpoon"
+  },
+  ["iron.nvim"] = {
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/iron.nvim",
+    url = "https://github.com/Vigemus/iron.nvim"
   },
   ["lualine.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/lualine.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/lualine.nvim",
     url = "https://github.com/nvim-lualine/lualine.nvim"
   },
-  ["mason-lspconfig.nvim"] = {
-    loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/mason-lspconfig.nvim",
-    url = "https://github.com/williamboman/mason-lspconfig.nvim"
-  },
-  ["mason.nvim"] = {
-    loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/mason.nvim",
-    url = "https://github.com/williamboman/mason.nvim"
+  ["mini.nvim"] = {
+    loaded = false,
+    needs_bufread = false,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/opt/mini.nvim",
+    url = "https://github.com/echasnovski/mini.nvim"
   },
   ["nui.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nui.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nui.nvim",
     url = "https://github.com/MunifTanjim/nui.nvim"
+  },
+  ["nvim-cmp"] = {
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-cmp",
+    url = "https://github.com/hrsh7th/nvim-cmp"
   },
   ["nvim-dap"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nvim-dap",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-dap",
     url = "https://github.com/mfussenegger/nvim-dap"
+  },
+  ["nvim-dap-ui"] = {
+    config = { "\27LJ\2\n3\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\ndapui\frequire\0" },
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-dap-ui",
+    url = "https://github.com/rcarriga/nvim-dap-ui"
   },
   ["nvim-lspconfig"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nvim-lspconfig",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-lspconfig",
     url = "https://github.com/neovim/nvim-lspconfig"
+  },
+  ["nvim-nio"] = {
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-nio",
+    url = "https://github.com/nvim-neotest/nvim-nio"
+  },
+  ["nvim-notify"] = {
+    loaded = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-notify",
+    url = "https://github.com/rcarriga/nvim-notify"
   },
   ["nvim-tree.lua"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nvim-tree.lua",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-tree.lua",
     url = "https://github.com/nvim-tree/nvim-tree.lua"
   },
   ["nvim-treesitter"] = {
+    after = { "render-markdown.nvim" },
+    config = { "\27LJ\2\nÔ\1\0\0\4\0\b\0\v6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\4\0005\3\3\0=\3\5\0025\3\6\0=\3\a\2B\0\2\1K\0\1\0\14highlight\1\0\1\venable\2\21ensure_installed\1\0\2\14highlight\0\21ensure_installed\0\1\b\0\0\rmarkdown\20markdown_inline\6r\vrnoweb\tyaml\nlatex\bcsv\nsetup\28nvim-treesitter.configs\frequire\0" },
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nvim-treesitter",
+    only_config = true,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-treesitter",
     url = "https://github.com/nvim-treesitter/nvim-treesitter"
   },
   ["nvim-web-devicons"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/nvim-web-devicons",
     url = "https://github.com/nvim-tree/nvim-web-devicons"
   },
   ["packer.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/packer.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/packer.nvim",
     url = "https://github.com/wbthomason/packer.nvim"
   },
   ["plenary.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/plenary.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/plenary.nvim",
     url = "https://github.com/nvim-lua/plenary.nvim"
   },
   ["pomodoro.nvim"] = {
     config = { "\27LJ\2\n…\1\0\0\3\0\4\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0B\0\2\1K\0\1\0\1\0\4\14time_work\3\25\25timers_to_long_break\3\4\20time_break_long\3\20\21time_break_short\3\5\nsetup\rpomodoro\frequire\0" },
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/pomodoro.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/pomodoro.nvim",
     url = "https://github.com/wthollingsworth/pomodoro.nvim"
+  },
+  ["render-markdown.nvim"] = {
+    config = { "\27LJ\2\nA\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\20render-markdown\frequire\0" },
+    load_after = {},
+    loaded = true,
+    needs_bufread = false,
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/opt/render-markdown.nvim",
+    url = "https://github.com/MeanderingProgrammer/render-markdown.nvim"
   },
   ["telescope.nvim"] = {
     loaded = true,
-    path = "/Users/rela/.local/share/nvim/site/pack/packer/start/telescope.nvim",
+    path = "/Users/jvergis/.local/share/nvim/site/pack/packer/start/telescope.nvim",
     url = "https://github.com/nvim-telescope/telescope.nvim"
   }
 }
 
 time([[Defining packer_plugins]], false)
+-- Config for: R.nvim
+time([[Config for R.nvim]], true)
+try_loadstring("\27LJ\2\n¡\1\0\0\a\0\b\0\0196\0\0\0009\0\1\0009\0\2\0)\2\0\0'\3\3\0'\4\4\0'\5\5\0004\6\0\0B\0\6\0016\0\0\0009\0\1\0009\0\2\0)\2\0\0'\3\6\0'\4\4\0'\5\a\0004\6\0\0B\0\6\1K\0\1\0\25<Plug>RSendSelection\6v\21<Plug>RDSendLine\f<Enter>\6n\24nvim_buf_set_keymap\bapi\bvim=\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\16toggle_view\14r.browser\frequireã\3\1\0\4\0\23\0\0295\0\3\0005\1\1\0003\2\0\0=\2\2\1=\1\4\0005\1\5\0=\1\6\0005\1\a\0003\2\b\0=\2\t\1=\1\n\0005\1\v\0=\1\f\0006\1\r\0009\1\14\0019\1\15\1\a\1\16\0X\1\4€'\1\18\0=\1\17\0+\1\2\0=\1\19\0006\1\20\0'\3\21\0B\1\2\0029\1\22\1\18\3\0\0B\1\2\1K\0\1\0\nsetup\6r\frequire\21objbr_auto_start\15on startup\15auto_start\ttrue\17R_AUTO_START\benv\bvim\17disable_cmds\1\5\0\0\18RClearConsole\17RCustomStart\vRSPlot\15RSaveClose\19objbr_mappings\6v\0\1\0\3\20<localleader>gg\27head({object}, n = 15)\6v\0\6c\nclass\vR_args\1\3\0\0\f--quiet\14--no-save\thook\1\0\6\21min_editor_width\3H\17disable_cmds\0\vR_args\0\19objbr_mappings\0\19rconsole_width\3N\thook\0\16on_filetype\1\0\1\16on_filetype\0\0\0", "config", "R.nvim")
+time([[Config for R.nvim]], false)
+-- Config for: nvim-treesitter
+time([[Config for nvim-treesitter]], true)
+try_loadstring("\27LJ\2\nÔ\1\0\0\4\0\b\0\v6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\4\0005\3\3\0=\3\5\0025\3\6\0=\3\a\2B\0\2\1K\0\1\0\14highlight\1\0\1\venable\2\21ensure_installed\1\0\2\14highlight\0\21ensure_installed\0\1\b\0\0\rmarkdown\20markdown_inline\6r\vrnoweb\tyaml\nlatex\bcsv\nsetup\28nvim-treesitter.configs\frequire\0", "config", "nvim-treesitter")
+time([[Config for nvim-treesitter]], false)
 -- Config for: pomodoro.nvim
 time([[Config for pomodoro.nvim]], true)
 try_loadstring("\27LJ\2\n…\1\0\0\3\0\4\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0B\0\2\1K\0\1\0\1\0\4\14time_work\3\25\25timers_to_long_break\3\4\20time_break_long\3\20\21time_break_short\3\5\nsetup\rpomodoro\frequire\0", "config", "pomodoro.nvim")
 time([[Config for pomodoro.nvim]], false)
+-- Config for: Comment.nvim
+time([[Config for Comment.nvim]], true)
+try_loadstring("\27LJ\2\n5\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\fComment\frequire\0", "config", "Comment.nvim")
+time([[Config for Comment.nvim]], false)
+-- Config for: nvim-dap-ui
+time([[Config for nvim-dap-ui]], true)
+try_loadstring("\27LJ\2\n3\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\ndapui\frequire\0", "config", "nvim-dap-ui")
+time([[Config for nvim-dap-ui]], false)
+-- Config for: cmp-r
+time([[Config for cmp-r]], true)
+try_loadstring("\27LJ\2\n…\1\0\0\5\0\a\0\0176\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\4\0004\3\3\0005\4\3\0>\4\1\3=\3\5\2B\0\2\0016\0\0\0'\2\6\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\ncmp_r\fsources\1\0\1\fsources\0\1\0\1\tname\ncmp_r\nsetup\bcmp\frequire\0", "config", "cmp-r")
+time([[Config for cmp-r]], false)
+-- Load plugins in order defined by `after`
+time([[Sequenced loading]], true)
+vim.cmd [[ packadd render-markdown.nvim ]]
+
+-- Config for: render-markdown.nvim
+try_loadstring("\27LJ\2\nA\0\0\3\0\3\0\a6\0\0\0'\2\1\0B\0\2\0029\0\2\0004\2\0\0B\0\2\1K\0\1\0\nsetup\20render-markdown\frequire\0", "config", "render-markdown.nvim")
+
+time([[Sequenced loading]], false)
 
 _G._packer.inside_compile = false
 if _G._packer.needs_bufread == true then
