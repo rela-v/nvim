@@ -34,6 +34,66 @@ use {
   use {
     'williamboman/mason.nvim',
   }
+  use { "nvim-neotest/nvim-nio" }
+  use {
+        "R-nvim/R.nvim",
+        config = function()
+            local opts = {
+                hook = {
+                    on_filetype = function()
+                        vim.api.nvim_buf_set_keymap(0, "n", "<Enter>", "<Plug>RDSendLine", {})
+                        vim.api.nvim_buf_set_keymap(0, "v", "<Enter>", "<Plug>RSendSelection", {})
+                    end
+                },
+                R_args = {"--quiet", "--no-save"},
+                min_editor_width = 72,
+                rconsole_width = 78,
+                objbr_mappings = {
+                    c = 'class',
+                    ['<localleader>gg'] = 'head({object}, n = 15)',
+                    v = function()
+                        require('r.browser').toggle_view()
+                    end
+                },
+                disable_cmds = {
+                    "RClearConsole",
+                    "RCustomStart",
+                    "RSPlot",
+                    "RSaveClose",
+                },
+            }
+            if vim.env.R_AUTO_START == "true" then
+                opts.auto_start = "on startup"
+                opts.objbr_auto_start = true
+            end
+            require("r").setup(opts)
+        end,
+    }
+    use 'neovim/nvim-lspconfig'
+    use {
+        "R-nvim/cmp-r",
+        requires = {"hrsh7th/nvim-cmp"},
+        config = function()
+            require("cmp").setup({ sources = {{ name = "cmp_r" }}})
+            require("cmp_r").setup({})
+        end,
+    }
+
+    use {
+        "nvim-treesitter/nvim-treesitter",
+        run = function()
+            vim.cmd(":TSUpdate")
+        end,
+        config = function ()
+            require("nvim-treesitter.configs").setup({
+                ensure_installed = { "markdown", "markdown_inline", "r", "rnoweb", "yaml", "latex", "csv" },
+                highlight = { enable = true },
+            })
+        end
+    }
+  use 'mfussenegger/nvim-dap'
+  use {'Vigemus/iron.nvim'}
+>>>>>>> origin
   use {
     'nvim-telescope/telescope.nvim',
     tag = '0.1.5',
@@ -46,6 +106,7 @@ use {
     branch = "harpoon2",
     requires = { {"nvim-lua/plenary.nvim"} }
   }
+  use 'rcarriga/nvim-notify'
   use {
     'wthollingsworth/pomodoro.nvim',
     requires = 'MunifTanjim/nui.nvim',
@@ -60,6 +121,7 @@ use {
   }
   use { 'neoclide/coc.nvim', branch = 'release' }
   use {
+<<<<<<< HEAD
   "~/.config/nvim/lua/note_plugin/",
   config = function()
     require("note_plugin").setup({

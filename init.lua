@@ -1,5 +1,6 @@
 require("core.plugins")
 require("core.plugin_config")
+require('core.rg_replace')
 
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
@@ -19,5 +20,9 @@ function! CheckBackspace() abort
 endfunction
 
 let g:coc_snippet_next = '<tab>'
+let g:python3_host_prog = '/usr/bin/python3'
 ]]
 )
+
+
+
