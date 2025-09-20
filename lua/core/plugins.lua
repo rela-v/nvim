@@ -26,6 +26,20 @@ return require('packer').startup(function(use)
   use { "catppuccin/nvim", as = "catppuccin" }
 
   -- Essentials
+  use({
+    "kdheepak/lazygit.nvim",
+    requires = {
+      "nvim-lua/plenary.nvim",
+    },
+    config = function()
+      -- Map <leader>g to open lazygit
+      vim.api.nvim_set_keymap("n", "<leader>gg", "<cmd>LazyGit<CR>", { noremap = true, silent = true })
+    end,
+  })
+  use 'cljoly/telescope-repo.nvim' 
+  use { 'nvim-telescope/telescope.nvim', 
+    requires = { {'nvim-lua/plenary.nvim'} } 
+  }
   use 'nvim-lua/plenary.nvim'
   use 'nvim-lualine/lualine.nvim'
   use 'rcarriga/nvim-notify'
@@ -76,6 +90,15 @@ return require('packer').startup(function(use)
       require("r").setup(opts)
     end,
   }
+
+  use {
+  'goolord/alpha-nvim',
+  requires = { 'nvim-tree/nvim-web-devicons' },
+  config = function()
+    require("core.plugin_config.alpha")
+  end
+}
+
 
   -- cmp-r
   use {

@@ -7,6 +7,7 @@ require("core.plugin_config.telescope")
 require("core.plugin_config.ultisnips")
 require("core.plugin_config.harpoon")
 require("core.plugin_config.commentnvim")
+require("core.plugin_config.alpha")
 vim.env.PATH = vim.env.PATH .. ':/opt/homebrew/bin'
 
 

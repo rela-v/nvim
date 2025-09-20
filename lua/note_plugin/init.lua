@@ -1,6 +1,8 @@
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
 local M = {}
 
 -- Configuration
@@ -11,10 +13,27 @@ local config = {
 
 -- Utility: Send a request
 local function request(method, endpoint, body)
-    local headers = string.format("-H 'Content-Type: application/json' -H 'X-API-Key: %s'", config.API_KEY)
+    if not config.base_url or not config.API_KEY then
+        vim.notify("Missing API config", vim.log.levels.ERROR)
+        return nil
+    end
+
     local url = config.base_url .. endpoint
-    local data = body and ("-d '" .. vim.fn.json_encode(body) .. "'") or ""
-    local cmd = string.format("curl -s -X %s %s %s '%s'", method, headers, data, url)
+
+    local cmd = {
+        "curl",
+        "-sS",  -- Silent but show errors
+        "--fail-with-body",  -- Makes curl exit non-zero on HTTP errors (and keeps body)
+        "-X", method,
+        "-H", "Content-Type: application/json",
+        "-H", "X-API-Key: " .. config.API_KEY,
+        url
+    }
+
+    if body then
+        table.insert(cmd, 6, "-d")
+        table.insert(cmd, 7, vim.fn.json_encode(body))
+    end
 
     local result = vim.fn.system(cmd)
     local status = vim.v.shell_error
@@ -24,7 +43,17 @@ local function request(method, endpoint, body)
         return nil
     end
 
-    return vim.fn.json_decode(result)
+    if not result or result == "" then
+        return {} -- OK, empty response (e.g. DELETE)
+    end
+
+    local ok, parsed = pcall(vim.fn.json_decode, result)
+    if not ok then
+        vim.notify("Failed to decode response: " .. result, vim.log.levels.ERROR)
+        return nil
+    end
+
+    return parsed
 end
 
 ---
@@ -68,6 +97,15 @@ local function split_tags(tag_string)
     return tags
 end
 
+local function split_lines(str)
+    if not str or str == "" then return {} end
+    local t = {}
+    for line in string.gmatch(str, "([^\n\r]+)") do
+        table.insert(t, line)
+    end
+    return t
+end
+
 -- ✏️ Edit buffer (used for create & update)
 function M.edit_note_buffer(opts)
     opts = opts or {}
@@ -79,21 +117,24 @@ function M.edit_note_buffer(opts)
     vim.api.nvim_set_current_buf(buf)
     
     -- Clear the buffer's contents
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, {})
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
 
     -- Set buffer options
     vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
     vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 
-    -- Set the buffer's content now that it is the current buffer
+    -- Build lines for the buffer, splitting content into lines
     local lines = {
         "Title: " .. (note.title or ""),
         "Tags: " .. table.concat(note.tags or {}, ", "),
         "",
-        "--- Write your content below ---",
-        note.content or ""
+        "--- Write your content below ---"
     }
-    
+    local content_lines = split_lines(note.content or "")
+    for _, line in ipairs(content_lines) do
+        table.insert(lines, line)
+    end
+
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
     -- Create the autocommand to handle the buffer write
@@ -150,24 +191,26 @@ end
 -- 🔄 Update existing note via buffer
 function M.update_note()
     -- Use a Telescope picker to select the note
+    local res = request("GET", "", nil)
+    if not res then
+        vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
+        return
+    end
+
     local notes_picker = pickers.new({}, {
         prompt_title = "Update Note",
-        finder = finders.new_dynamic({
-            request("GET", "", nil)
-        }, {
+        finder = finders.new_table({
+            results = res,
             entry_maker = function(note)
                 return {
                     value = note,
                     display = string.format("%s | %s", note.id, note.title),
                     ordinal = note.title,
                 }
-            end
+            end,
         }),
         sorter = conf.generic_sorter({}),
         attach_mappings = function(prompt_bufnr, map)
-            local actions = require("telescope.actions")
-            local action_state = require("telescope.actions.state")
-
             actions.select_default:replace(function()
                 local selection = action_state.get_selected_entry()
                 actions.close(prompt_bufnr)
@@ -176,8 +219,9 @@ function M.update_note()
                 end
             end)
             return true
-        end
+        end,
     })
+
     notes_picker:find()
 end
 
@@ -202,6 +246,15 @@ function M.list_notes()
 end
 
 -- 🔍 View note by ID in center float
+local function split_lines(str)
+    if not str or str == "" then return {} end
+    local t = {}
+    for line in string.gmatch(str, "([^\n\r]+)") do
+        table.insert(t, line)
+    end
+    return t
+end
+
 function M.view_note(note_id)
     if not note_id then
         vim.ui.input({ prompt = "Note ID to view: " }, function(id)
@@ -221,32 +274,39 @@ function M.view_note(note_id)
         "🆔 " .. res.id,
         "🏷️ " .. table.concat(res.tags or {}, ", "),
         string.rep("-", 40),
-        res.content
     }
+
+    -- Split content into multiple lines and append
+    local content_lines = split_lines(res.content or "")
+    for _, line in ipairs(content_lines) do
+        table.insert(lines, line)
+    end
 
     center_float(lines, { width = 70 })
 end
 
 -- ❌ Delete a note by ID
 function M.delete_note()
+    local res = request("GET", "", nil)
+    if not res then
+        vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
+        return
+    end
+
     local notes_picker = pickers.new({}, {
         prompt_title = "Delete Note",
-        finder = finders.new_dynamic({
-            request("GET", "", nil)
-        }, {
+        finder = finders.new_table({
+            results = res,
             entry_maker = function(note)
                 return {
                     value = note,
                     display = string.format("%s | %s", note.id, note.title),
                     ordinal = note.title,
                 }
-            end
+            end,
         }),
         sorter = conf.generic_sorter({}),
         attach_mappings = function(prompt_bufnr, map)
-            local actions = require("telescope.actions")
-            local action_state = require("telescope.actions.state")
-
             actions.select_default:replace(function()
                 local selection = action_state.get_selected_entry()
                 actions.close(prompt_bufnr)
@@ -263,8 +323,9 @@ function M.delete_note()
                 end
             end)
             return true
-        end
+        end,
     })
+
     notes_picker:find()
 end
 
