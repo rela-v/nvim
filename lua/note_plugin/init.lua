@@ -110,7 +110,7 @@ end
 function M.edit_note_buffer(opts)
     opts = opts or {}
     local is_update = opts.is_update or false
-    local note = opts.note or { title = "", tags = {}, content = "" }
+    local note = opts.note or { title = "", tags = {}, content = "", item_type = "note" } -- Add default item_type for new notes
 
     -- Find an existing scratch buffer or create a new one
     local buf = vim.fn.bufadd("New Note")
@@ -142,7 +142,6 @@ function M.edit_note_buffer(opts)
         buffer = buf,
         once = true,
         callback = function()
-            -- ... (your existing save logic here) ...
             local new_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
             local title = new_lines[1]:gsub("^Title:%s*", "")
             local tags_line = new_lines[2]:gsub("^Tags:%s*", "")
@@ -158,17 +157,23 @@ function M.edit_note_buffer(opts)
             local content = table.concat(vim.list_slice(new_lines, content_start), "\n")
             local tags = split_tags(tags_line)
 
-            local body = {
-                title = title,
-                content = content,
-                tags = tags
-            }
-
             local res
             if is_update and note.id then
-                res = request("PUT", "/" .. note.id, body)
+                local body = {
+                    item_type = note.item_type, -- Pass item type for update
+                    title = title,
+                    content = content,
+                    tags = tags
+                }
+                res = request("PUT", "/items/" .. note.id, body)
             else
-                res = request("POST", "", body)
+                local body = {
+                    item_type = "note", -- Required field for create
+                    title = title,
+                    content = content,
+                    tags = tags
+                }
+                res = request("POST", "/items", body)
             end
 
             if res then
@@ -191,7 +196,7 @@ end
 -- 🔄 Update existing note via buffer
 function M.update_note()
     -- Use a Telescope picker to select the note
-    local res = request("GET", "", nil)
+    local res = request("GET", "/items", nil)
     if not res then
         vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
         return
@@ -227,7 +232,7 @@ end
 
 -- 📜 List notes using a simple Vim UI picker
 function M.list_notes()
-    local res = request("GET", "", nil)
+    local res = request("GET", "/items", nil)
     if not res then return end
 
     local entries = {}
@@ -263,7 +268,7 @@ function M.view_note(note_id)
         return
     end
 
-    local res = request("GET", "/" .. note_id, nil)
+    local res = request("GET", "/items/" .. note_id, nil)
     if not res then
         vim.notify("Note not found", vim.log.levels.ERROR)
         return
@@ -287,7 +292,7 @@ end
 
 -- ❌ Delete a note by ID
 function M.delete_note()
-    local res = request("GET", "", nil)
+    local res = request("GET", "/items", nil)
     if not res then
         vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
         return
@@ -314,7 +319,7 @@ function M.delete_note()
                     local confirm = vim.fn.input("Are you sure you want to delete this note? (y/n): ")
                     if confirm:lower() ~= "y" then return end
 
-                    local res = request("DELETE", "/" .. selection.value.id, nil)
+                    local res = request("DELETE", "/items/" .. selection.value.id, nil)
                     if res == nil then
                         vim.notify("Note deleted", vim.log.levels.INFO)
                     else
@@ -333,7 +338,9 @@ end
 function M.notes_by_tag()
     vim.ui.input({ prompt = "Tag to search: " }, function(tag)
         if not tag then return end
-        local res = request("GET", "/tags/" .. tag, nil)
+        
+        -- Corrected endpoint to use query parameters
+        local res = request("GET", "/items?tags=" .. vim.fn.urlencode(tag), nil)
         if not res then return end
 
         local entries = {}
@@ -354,7 +361,6 @@ end
 
 ---
 
-
 -- 🔧 Setup
 function M.setup(user_config)
     config.API_KEY = user_config.API_KEY or config.API_KEY
@@ -362,3 +368,4 @@ function M.setup(user_config)
 end
 
 return M
+
