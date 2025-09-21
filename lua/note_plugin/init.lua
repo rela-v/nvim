@@ -223,6 +223,9 @@ function M.create_todo()
     local repo_url_cmd = { "git", "config", "--get", "remote.origin.url" }
     local repo_url = vim.fn.system(repo_url_cmd)
     
+    -- Fix: Trim the trailing newline from the command's output
+    repo_url = repo_url:gsub("^%s*(.-)%s*$", "%1")
+    
     -- Check for errors or empty output
     if vim.v.shell_error ~= 0 or not repo_url or repo_url == "" then
         repo_url = nil
