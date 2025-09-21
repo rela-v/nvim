@@ -165,20 +165,30 @@ return require('packer').startup(function(use)
   use 'Vigemus/iron.nvim'
 
   -- Local note plugin
-  use {
-    "~/.config/nvim/lua/note_plugin/",
-    config = function()
-      local note = require("note_plugin")
+use {
+  "~/.config/nvim/lua/note_plugin/",
+  config = function()
+    local note = require("note_plugin")
 
-      local map = vim.keymap.set
-      map("n", "<leader>nn", note.create_note, { desc = "Create Note" })
-      map("n", "<leader>nl", note.list_notes, { desc = "List Notes (vim.ui.select)" })
-      map("n", "<leader>nv", note.view_note, { desc = "View Note by ID" })
-      map("n", "<leader>nd", note.delete_note, { desc = "Delete Note (Telescope)" })
-      map("n", "<leader>nu", note.update_note, { desc = "Update Note (Telescope)" })
-      map("n", "<leader>nt", note.notes_by_tag, { desc = "Notes by Tag" })
-    end
-  }
+    -- You can also call the setup function directly from here if you prefer.
+    note.setup({
+        API_KEY = os.getenv("NOTES_API_KEY"),
+        base_url = os.getenv("NOTES_API_URL")
+    })
+
+    local map = vim.keymap.set
+    map("n", "<leader>nn", note.create_note, { desc = "Create Note" })
+    map("n", "<leader>nl", note.list_notes, { desc = "List Notes (vim.ui.select)" })
+    map("n", "<leader>nv", note.view_note, { desc = "View Note by ID" })
+    map("n", "<leader>nd", note.delete_note, { desc = "Delete Note (Telescope)" })
+    map("n", "<leader>nu", note.update_note, { desc = "Update Note (Telescope)" })
+    map("n", "<leader>nt", note.notes_by_tag, { desc = "Notes by Tag" })
+    
+    -- Add the new keymaps for the TODO functions
+    map("n", "<leader>nC", note.create_todo, { desc = "Create TODO from current line" })
+    map("n", "<leader>nT", note.list_todos, { desc = "List all TODOs" })
+  end
+}
 
   -- Automatically set up config after cloning packer
   if packer_bootstrap then

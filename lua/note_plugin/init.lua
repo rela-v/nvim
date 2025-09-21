@@ -110,7 +110,7 @@ end
 function M.edit_note_buffer(opts)
     opts = opts or {}
     local is_update = opts.is_update or false
-    local note = opts.note or { title = "", tags = {}, content = "", item_type = "note" } -- Add default item_type for new notes
+    local note = opts.note or { title = "", tags = {}, content = "", item_type = opts.item_type or "note", code_location = nil }
 
     -- Find an existing scratch buffer or create a new one
     local buf = vim.fn.bufadd("New Note")
@@ -123,13 +123,21 @@ function M.edit_note_buffer(opts)
     vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
     vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 
-    -- Build lines for the buffer, splitting content into lines
+    -- Build lines for the buffer, including code location if present
     local lines = {
         "Title: " .. (note.title or ""),
         "Tags: " .. table.concat(note.tags or {}, ", "),
-        "",
-        "--- Write your content below ---"
     }
+
+    if note.code_location then
+        table.insert(lines, "Git Repo: " .. (note.code_location.repo or "N/A"))
+        table.insert(lines, "File Path: " .. (note.code_location.path or "N/A"))
+        table.insert(lines, "Line: " .. (note.code_location.line or "N/A"))
+    end
+    
+    table.insert(lines, "")
+    table.insert(lines, "--- Write your content below ---")
+
     local content_lines = split_lines(note.content or "")
     for _, line in ipairs(content_lines) do
         table.insert(lines, line)
@@ -156,22 +164,27 @@ function M.edit_note_buffer(opts)
 
             local content = table.concat(vim.list_slice(new_lines, content_start), "\n")
             local tags = split_tags(tags_line)
+            
+            -- Preserve code location from original note
+            local code_location = note.code_location
 
             local res
             if is_update and note.id then
                 local body = {
-                    item_type = note.item_type, -- Pass item type for update
+                    item_type = note.item_type,
                     title = title,
                     content = content,
-                    tags = tags
+                    tags = tags,
+                    code_location = code_location
                 }
                 res = request("PUT", "/items/" .. note.id, body)
             else
                 local body = {
-                    item_type = "note", -- Required field for create
+                    item_type = note.item_type,
                     title = title,
                     content = content,
-                    tags = tags
+                    tags = tags,
+                    code_location = code_location
                 }
                 res = request("POST", "/items", body)
             end
@@ -190,7 +203,45 @@ end
 
 -- 📝 Create a new note via buffer
 function M.create_note()
-    M.edit_note_buffer({ is_update = false })
+    local note = {
+        title = "",
+        tags = {},
+        content = "",
+        item_type = "note",
+        code_location = nil
+    }
+    M.edit_note_buffer({ is_update = false, note = note })
+end
+
+-- ✅ Create a new TODO item from current line, including file path and line number
+function M.create_todo()
+    local line_content = vim.api.nvim_get_current_line()
+    local file_path = vim.fn.expand('%:p')
+    local line_number = vim.fn.line('.')
+    
+    -- Get the git remote URL, if available
+    local repo_url_cmd = { "git", "config", "--get", "remote.origin.url" }
+    local repo_url = vim.fn.system(repo_url_cmd)
+    
+    -- Check for errors or empty output
+    if vim.v.shell_error ~= 0 or not repo_url or repo_url == "" then
+        repo_url = nil
+    end
+
+    local code_location = {
+        repo = repo_url,
+        path = vim.fn.fnamemodify(file_path, ":~:."),
+        line = line_number
+    }
+    
+    local note = {
+        title = "TODO",
+        tags = { "todo" },
+        content = line_content,
+        item_type = "todo",
+        code_location = code_location
+    }
+    M.edit_note_buffer({ is_update = false, note = note })
 end
 
 -- 🔄 Update existing note via buffer
@@ -250,16 +301,31 @@ function M.list_notes()
     end)
 end
 
--- 🔍 View note by ID in center float
-local function split_lines(str)
-    if not str or str == "" then return {} end
-    local t = {}
-    for line in string.gmatch(str, "([^\n\r]+)") do
-        table.insert(t, line)
+-- 📋 List all TODO items using a simple Vim UI picker
+function M.list_todos()
+    -- Request all items with item_type="todo"
+    local res = request("GET", "/items?type=todo", nil)
+    if not res then
+        vim.notify("Failed to fetch TODOs", vim.log.levels.ERROR)
+        return
     end
-    return t
+
+    local entries = {}
+    for _, todo in ipairs(res) do
+        table.insert(entries, { value = todo, text = string.format("%s | %s", todo.id, todo.title) })
+    end
+
+    vim.ui.select(entries, {
+        prompt = "Select a TODO to view:",
+        format_item = function(item) return item.text end
+    }, function(choice)
+        if choice then
+            M.view_note(choice.value.id)
+        end
+    end)
 end
 
+-- 🔍 View note by ID in center float
 function M.view_note(note_id)
     if not note_id then
         vim.ui.input({ prompt = "Note ID to view: " }, function(id)
