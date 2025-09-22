@@ -187,6 +187,7 @@ use {
     -- Add the new keymaps for the TODO functions
     map("n", "<leader>nC", note.create_todo, { desc = "Create TODO from current line" })
     map("n", "<leader>nT", note.list_todos, { desc = "List all TODOs" })
+    map("n", "<leader>nJ", note.go_to_todo_location, { desc = "Jump to TODO location" })
   end
 }
 
