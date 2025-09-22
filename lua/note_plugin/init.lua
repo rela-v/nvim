@@ -192,7 +192,6 @@ function M.edit_note_buffer(opts)
 			local code_location = nil
 			if file_path and line_num then
 				code_location = {
-					repo = git_repo,
 					file_path = file_path,
 					line_number = line_num,
 				}
@@ -201,13 +200,26 @@ function M.edit_note_buffer(opts)
 			local content = table.concat(vim.list_slice(new_lines, content_start_idx), "\n")
 			local tags = split_tags(tags_line)
 
-			local body = {
-				type = note.type,
-				title = title,
-				content = content,
-				tags = tags,
-				code_location = code_location,
-			}
+			-- Construct request body
+			local body = {}
+
+			-- Fields handled slightly differently for PUT vs POST
+			if is_update then
+				-- All fields optional
+				if note.type then body["type"] = note.type end
+				if title ~= "" then body.title = title end
+				if content and content ~= "" then body.content = content end
+				if tags and #tags > 0 then body.tags = tags end
+				if code_location then body.code_location = code_location end
+			else
+				-- Required: type, title
+				body["type"] = note.type or "note"
+				body.title = title
+
+				if content and content ~= "" then body.content = content end
+				if tags and #tags > 0 then body.tags = tags end
+				if code_location then body.code_location = code_location end
+			end
 
 			local res
 			if is_update and note.id then

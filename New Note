@@ -1,10 +1,4 @@
-Title: TODO
-Tags: todo
-Git Repo: https://github.com/rela-v/nvim
-File Path: lua/note_plugin/init.lua
-Line: 3
+Title: 
+Tags: 
 
 --- Write your content below ---
-local conf = require("telescope.config").values
-
-New
