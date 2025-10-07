@@ -9,17 +9,11 @@ local M = {}
 ---@field API_KEY string
 ---@field base_url string
 
--- Configuration
 local config = {
 	API_KEY = os.getenv("NOTES_API_KEY"),
 	base_url = os.getenv("NOTES_API_URL"),
 }
 
---- Utility: Send a request
----@param method string
----@param endpoint string
----@param body table | nil
----@return table | nil
 local function request(method, endpoint, body)
 	if not config.base_url or not config.API_KEY then
 		vim.notify("Missing API config", vim.log.levels.ERROR)
@@ -27,17 +21,10 @@ local function request(method, endpoint, body)
 	end
 
 	local url = config.base_url .. endpoint
-
 	local cmd = {
-		"curl",
-		"-sS",
-		"--fail-with-body",
-		"-X",
-		method,
-		"-H",
-		"Content-Type: application/json",
-		"-H",
-		"X-API-Key: " .. config.API_KEY,
+		"curl", "-sS", "--fail-with-body", "-X", method,
+		"-H", "Content-Type: application/json",
+		"-H", "X-API-Key: " .. config.API_KEY,
 		url,
 	}
 
@@ -67,9 +54,6 @@ local function request(method, endpoint, body)
 	return parsed
 end
 
---- Floating UI helper (centered scratch buffer)
----@param lines string[]
----@param opts table | nil
 local function center_float(lines, opts)
 	opts = opts or {}
 	local width = opts.width or 60
@@ -94,9 +78,6 @@ local function center_float(lines, opts)
 	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 end
 
---- Helper: tag parsing
----@param tag_string string
----@return string[]
 local function split_tags(tag_string)
 	local tags = {}
 	for tag in string.gmatch(tag_string, "[^,%s]+") do
@@ -105,8 +86,6 @@ local function split_tags(tag_string)
 	return tags
 end
 
----@param str string | nil
----@return string[]
 local function split_lines(str)
 	if not str or str == "" then
 		return {}
@@ -118,127 +97,142 @@ local function split_lines(str)
 	return t
 end
 
---- Edit buffer (used for create & update)
----@param opts table | nil
 function M.edit_note_buffer(opts)
-	opts = opts or {}
-	local is_update = opts.is_update or false
-	local note = opts.note or {
-		title = "",
-		tags = {},
-		content = "",
-		type = opts.type or "note",
-		code_location = nil,
-	}
+  opts = opts or {}
+  local is_update = opts.is_update or false
+  local note = opts.note or {
+    title = "",
+    tags = {},
+    content = "",
+    type = opts.type or "note",
+    code_location = nil,
+  }
 
-	local buf = vim.fn.bufadd("New Note")
-	vim.api.nvim_set_current_buf(buf)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
+  local buf = vim.fn.bufadd(is_update and ("Edit Note: " .. (note.title or "Untitled")) or "New Note")
+  vim.api.nvim_set_current_buf(buf)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
 
-	vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
-	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
+  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 
-	local lines = {
-		"Title: " .. (note.title or ""),
-		"Tags: " .. table.concat(note.tags or {}, ", "),
-	}
+  local function safe_get(obj, key)
+    if type(obj) == "table" then
+      local val = obj[key]
+      if val == nil then
+        return "N/A"
+      elseif type(val) == "userdata" then
+        return "N/A"
+      else
+        return tostring(val)
+      end
+    end
+    return "N/A"
+  end
 
-	if note.code_location then
-		table.insert(lines, "Git Repo: " .. (note.code_location.repo or "N/A"))
-		table.insert(lines, "File Path: " .. (note.code_location.file_path or "N/A"))
-		table.insert(lines, "Line: " .. (note.code_location.line_number or "N/A"))
-	end
+  local lines = {
+    "Title: " .. (note.title or ""),
+    "Tags: " .. table.concat(note.tags or {}, ", "),
+  }
 
-	table.insert(lines, "")
-	table.insert(lines, "--- Write your content below ---")
+  if note.code_location and type(note.code_location) == "table" then
+    table.insert(lines, "Git Repo: " .. safe_get(note.code_location, "repo"))
+    table.insert(lines, "File Path: " .. safe_get(note.code_location, "file_path"))
+    table.insert(lines, "Line: " .. safe_get(note.code_location, "line_number"))
+  else
+    table.insert(lines, "Git Repo: N/A")
+    table.insert(lines, "File Path: N/A")
+    table.insert(lines, "Line: N/A")
+  end
 
-	for _, line in ipairs(split_lines(note.content or "")) do
-		table.insert(lines, line)
-	end
+  table.insert(lines, "")
+  table.insert(lines, "--- Write your content below ---")
 
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  local content_str = ""
+  if type(note.content) == "string" then
+    content_str = note.content
+  end
 
-	vim.api.nvim_create_autocmd("BufWritePost", {
-		buffer = buf,
-		once = true,
-		callback = function()
-			local new_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-			local title, tags_line, content_start_idx = "", "", 0
-			local git_repo, file_path, line_num = nil, nil, nil
+  for _, line in ipairs(split_lines(content_str)) do
+    table.insert(lines, line)
+  end
 
-			for i, line in ipairs(new_lines) do
-				if line:match("^Title:") then
-					title = line:gsub("^Title:%s*", "")
-				elseif line:match("^Tags:") then
-					tags_line = line:gsub("^Tags:%s*", "")
-				elseif line:match("^Git Repo:") then
-					git_repo = line:gsub("^Git Repo:%s*", "")
-				elseif line:match("^File Path:") then
-					file_path = line:gsub("^File Path:%s*", "")
-				elseif line:match("^Line:") then
-					local line_str = line:gsub("^Line:%s*", "")
-					local num = tonumber(line_str)
-					if num and type(num) == "number" then
-						line_num = num
-					else
-						vim.notify("Invalid line number: " .. line_str, vim.log.levels.WARN)
-					end
-				elseif line:match("^%-%-%-") then
-					content_start_idx = i + 1
-					break
-				end
-			end
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
-			local code_location = nil
-			if file_path and line_num then
-				code_location = {
-					file_path = file_path,
-					line_number = line_num,
-				}
-			end
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    buffer = buf,
+    once = true,
+    callback = function()
+      local new_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      local title, tags_line, content_start_idx = "", "", 0
+      local git_repo, file_path, line_num = nil, nil, nil
 
-			local content = table.concat(vim.list_slice(new_lines, content_start_idx), "\n")
-			local tags = split_tags(tags_line)
+      for i, line in ipairs(new_lines) do
+        if line:match("^Title:") then
+          title = line:gsub("^Title:%s*", "")
+        elseif line:match("^Tags:") then
+          tags_line = line:gsub("^Tags:%s*", "")
+        elseif line:match("^Git Repo:") then
+          git_repo = line:gsub("^Git Repo:%s*", "")
+        elseif line:match("^File Path:") then
+          file_path = line:gsub("^File Path:%s*", "")
+        elseif line:match("^Line:") then
+          local line_str = line:gsub("^Line:%s*", "")
+          local num = tonumber(line_str)
+          if num and type(num) == "number" then
+            line_num = num
+          else
+            vim.notify("Invalid line number: " .. line_str, vim.log.levels.WARN)
+          end
+        elseif line:match("^%-%-%-") then
+          content_start_idx = i + 1
+          break
+        end
+      end
 
-			-- Construct request body
-			local body = {}
+      local code_location = nil
+      if file_path and line_num then
+        code_location = {
+          file_path = file_path,
+          line_number = line_num,
+        }
+      end
 
-			-- Fields handled slightly differently for PUT vs POST
-			if is_update then
-				-- All fields optional
-				if note.type then body["type"] = note.type end
-				if title ~= "" then body.title = title end
-				if content and content ~= "" then body.content = content end
-				if tags and #tags > 0 then body.tags = tags end
-				if code_location then body.code_location = code_location end
-			else
-				-- Required: type, title
-				body["type"] = note.type or "note"
-				body.title = title
+      local content = table.concat(vim.list_slice(new_lines, content_start_idx), "\n")
+      local tags = split_tags(tags_line)
 
-				if content and content ~= "" then body.content = content end
-				if tags and #tags > 0 then body.tags = tags end
-				if code_location then body.code_location = code_location end
-			end
+      local body = {}
 
-			local res
-			if is_update and note.id then
-				res = request("PUT", "/items/" .. note.id, body)
-			else
-				res = request("POST", "/items", body)
-			end
+      if is_update then
+        if note.type then body["type"] = note.type end
+        if title ~= "" then body.title = title end
+        if content and content ~= "" then body.content = content end
+        if tags and #tags > 0 then body.tags = tags end
+        if code_location then body.code_location = code_location end
+      else
+        body["type"] = note.type or "note"
+        body.title = title
+        if content and content ~= "" then body.content = content end
+        if tags and #tags > 0 then body.tags = tags end
+        if code_location then body.code_location = code_location end
+      end
 
-			if res then
-				vim.notify(is_update and "Note updated!" or "Note created!", vim.log.levels.INFO)
-				vim.api.nvim_buf_delete(buf, { force = true })
-			else
-				vim.notify("Failed to save note", vim.log.levels.ERROR)
-			end
-		end,
-	})
+      local res
+      if is_update and note.id then
+        res = request("PUT", "/items/" .. note.id, body)
+      else
+        res = request("POST", "/items", body)
+      end
+
+      if res then
+        vim.notify(is_update and "Note updated!" or "Note created!", vim.log.levels.INFO)
+        vim.api.nvim_buf_delete(buf, { force = true })
+      else
+        vim.notify("Failed to save note", vim.log.levels.ERROR)
+      end
+    end,
+  })
 end
 
---- Create a new note
 function M.create_note()
 	local note = {
 		title = "",
@@ -250,7 +244,6 @@ function M.create_note()
 	M.edit_note_buffer({ is_update = false, note = note })
 end
 
---- Create a TODO from current line
 function M.create_todo()
 	local line_content = vim.api.nvim_get_current_line()
 	local file_path = vim.fn.expand("%:p")
@@ -278,18 +271,20 @@ function M.create_todo()
 	M.edit_note_buffer({ is_update = false, note = note })
 end
 
---- Update existing note via Telescope
-function M.update_note()
-	local res = request("GET", "/items", nil)
-	if not res then
-		vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
+local function make_picker(opts)
+	local notes = opts.notes
+	local prompt_title = opts.prompt_title
+	local on_select = opts.on_select
+
+	if not notes or vim.tbl_isempty(notes) then
+		vim.notify("No notes found", vim.log.levels.INFO)
 		return
 	end
 
 	pickers.new({}, {
-		prompt_title = "Update Note",
+		prompt_title = prompt_title,
 		finder = finders.new_table({
-			results = res,
+			results = notes,
 			entry_maker = function(note)
 				return {
 					value = note,
@@ -303,8 +298,8 @@ function M.update_note()
 			actions.select_default:replace(function()
 				local selection = action_state.get_selected_entry()
 				actions.close(prompt_bufnr)
-				if selection then
-					M.edit_note_buffer({ is_update = true, note = selection.value })
+				if selection and on_select then
+					on_select(selection.value)
 				end
 			end)
 			return true
@@ -312,31 +307,38 @@ function M.update_note()
 	}):find()
 end
 
---- List notes
-function M.list_notes()
+function M.update_note()
 	local res = request("GET", "/items", nil)
 	if not res then
+		vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
 		return
 	end
 
-	local entries = {}
-	for _, note in ipairs(res) do
-		table.insert(entries, { value = note, text = string.format("%s | %s", note.id, note.title) })
-	end
-
-	vim.ui.select(entries, {
-		prompt = "Select a note to view:",
-		format_item = function(item)
-			return item.text
+	make_picker({
+		notes = res,
+		prompt_title = "Update Note",
+		on_select = function(note)
+			M.edit_note_buffer({ is_update = true, note = note })
 		end,
-	}, function(choice)
-		if choice then
-			M.view_note(choice.value.id)
-		end
-	end)
+	})
 end
 
---- List TODOs
+function M.list_notes()
+	local res = request("GET", "/items", nil)
+	if not res then
+		vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
+		return
+	end
+
+	make_picker({
+		notes = res,
+		prompt_title = "List Notes",
+		on_select = function(note)
+			M.view_note(note.id)
+		end,
+	})
+end
+
 function M.list_todos()
 	local res = request("GET", "/items?tags=todo", nil)
 	if not res then
@@ -344,32 +346,31 @@ function M.list_todos()
 		return
 	end
 
-	local entries = {}
-	for _, todo in ipairs(res) do
-		table.insert(entries, { value = todo, text = string.format("%s | %s", todo.id, todo.title) })
-	end
-
-	vim.ui.select(entries, {
-		prompt = "Select a TODO to view:",
-		format_item = function(item)
-			return item.text
+	make_picker({
+		notes = res,
+		prompt_title = "TODOs",
+		on_select = function(todo)
+			M.view_note(todo.id)
 		end,
-	}, function(choice)
-		if choice then
-			M.view_note(choice.value.id)
-		end
-	end)
+	})
 end
 
---- View note by ID
----@param note_id string | nil
 function M.view_note(note_id)
 	if not note_id then
-		vim.ui.input({ prompt = "Note ID to view: " }, function(id)
-			if id then
-				M.view_note(id)
-			end
-		end)
+		-- Use telescope to select a note instead of vim.ui.input
+		local res = request("GET", "/items", nil)
+		if not res then
+			vim.notify("Failed to fetch notes", vim.log.levels.ERROR)
+			return
+		end
+
+		make_picker({
+			notes = res,
+			prompt_title = "Select Note to View",
+			on_select = function(note)
+				M.view_note(note.id)
+			end,
+		})
 		return
 	end
 
@@ -386,7 +387,8 @@ function M.view_note(note_id)
 		string.rep("-", 40),
 	}
 
-	if res.code_location and res.code_location.file_path then
+	-- Defensive check for code_location: only use if it's a table, not userdata
+	if type(res.code_location) == "table" and res.code_location.file_path then
 		table.insert(lines, "Git Repo: " .. (res.code_location.repo or "N/A"))
 		table.insert(lines, "File Path: " .. res.code_location.file_path)
 		table.insert(lines, "Line: " .. (res.code_location.line_number or "N/A"))
@@ -400,7 +402,7 @@ function M.view_note(note_id)
 	center_float(lines, { width = 70 })
 end
 
---- Delete a note
+
 function M.delete_note()
 	local res = request("GET", "/items", nil)
 	if not res then
@@ -408,73 +410,104 @@ function M.delete_note()
 		return
 	end
 
-	pickers.new({}, {
+	make_picker({
+		notes = res,
 		prompt_title = "Delete Note",
-		finder = finders.new_table({
-			results = res,
-			entry_maker = function(note)
-				return {
-					value = note,
-					display = string.format("%s | %s", note.id, note.title),
-					ordinal = note.title,
-				}
-			end,
-		}),
-		sorter = conf.generic_sorter({}),
-		attach_mappings = function(prompt_bufnr, map)
-			actions.select_default:replace(function()
-				local selection = action_state.get_selected_entry()
-				actions.close(prompt_bufnr)
-				if selection then
-					local confirm = vim.fn.input("Are you sure you want to delete this note? (y/n): ")
-					if confirm:lower() ~= "y" then
-						return
-					end
+		on_select = function(note)
+			vim.ui.input({
+				prompt = "Are you sure you want to delete this note? (y/n): ",
+			}, function(confirm)
+				if not confirm or confirm:lower() ~= "y" then
+					vim.notify("Deletion cancelled", vim.log.levels.INFO)
+					return
+				end
 
-					local res = request("DELETE", "/items/" .. selection.value.id, nil)
-					if res == nil then
-						vim.notify("Note deleted", vim.log.levels.INFO)
-					else
-						vim.notify("Failed to delete note", vim.log.levels.ERROR)
-					end
+				local del_res = request("DELETE", "/items/" .. note.id, nil)
+				if del_res ~= nil then
+					vim.notify("Note deleted", vim.log.levels.INFO)
+				else
+					vim.notify("Failed to delete note", vim.log.levels.ERROR)
 				end
 			end)
-			return true
 		end,
-	}):find()
+	})
 end
 
---- Filter notes by tag
 function M.notes_by_tag()
-	vim.ui.input({ prompt = "Tag to search: " }, function(tag)
-		if not tag then
-			return
-		end
-		local encoded_tag = tag:gsub(" ", "%%20") -- workaround for lack of vim.fn.urlencode
-		local res = request("GET", "/items?tags=" .. encoded_tag, nil)
-		if not res then
-			return
-		end
+  -- 1. Fetch ALL notes
+  local notes = request("GET", "/items", nil)
+  if not notes or vim.tbl_isempty(notes) then
+    vim.notify("No notes found", vim.log.levels.INFO)
+    return
+  end
 
-		local entries = {}
-		for _, note in ipairs(res) do
-			table.insert(entries, { value = note, text = string.format("%s | %s", note.id, note.title) })
-		end
+  -- 2. Extract all unique tags from notes
+  local tag_set = {}
+  for _, note in ipairs(notes) do
+    if note.tags and type(note.tags) == "table" then
+      for _, tag in ipairs(note.tags) do
+        tag_set[tag] = true
+      end
+    end
+  end
 
-		vim.ui.select(entries, {
-			prompt = "Notes with tag '" .. tag .. "'",
-			format_item = function(item)
-				return item.text
-			end,
-		}, function(choice)
-			if choice then
-				M.view_note(choice.value.id)
-			end
-		end)
-	end)
+  -- 3. Convert tag_set keys to list
+  local tags = {}
+  for tag, _ in pairs(tag_set) do
+    table.insert(tags, tag)
+  end
+
+  -- 4. Show tag picker with Telescope
+  local pick_tag = function(prompt_bufnr)
+    local selection = action_state.get_selected_entry()
+    actions.close(prompt_bufnr)
+    if not selection or not selection.value then
+      return
+    end
+
+    local chosen_tag = selection.value
+
+    -- 5. Filter notes by chosen tag
+    local filtered_notes = {}
+    for _, note in ipairs(notes) do
+      if note.tags and vim.tbl_contains(note.tags, chosen_tag) then
+        table.insert(filtered_notes, note)
+      end
+    end
+
+    -- 6. Show filtered notes picker
+    make_picker({
+      notes = filtered_notes,
+      prompt_title = "Notes tagged: " .. chosen_tag,
+      on_select = function(note)
+        M.view_note(note.id)
+      end,
+    })
+  end
+
+  pickers.new({}, {
+    prompt_title = "Select Tag",
+    finder = finders.new_table({
+      results = tags,
+      entry_maker = function(tag)
+        return {
+          value = tag,
+          display = tag,
+          ordinal = tag,
+        }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    attach_mappings = function(prompt_bufnr, map)
+      actions.select_default:replace(function()
+        pick_tag(prompt_bufnr)
+      end)
+      return true
+    end,
+  }):find()
 end
 
---- Jump to code location of TODO
+
 function M.go_to_todo_location()
 	local todos = request("GET", "/items?tags=todo", nil)
 	if not todos then
@@ -485,50 +518,62 @@ function M.go_to_todo_location()
 	local entries = {}
 	for _, todo in ipairs(todos) do
 		if todo.code_location and todo.code_location.file_path then
-			table.insert(entries, {
-				value = todo,
-				text = string.format(
-					"%s:%s | %s",
-					todo.code_location.file_path,
-					todo.code_location.line_number,
-					todo.title
-				),
-			})
+			table.insert(entries, todo)
 		end
 	end
 
-	if #entries == 0 then
+	if vim.tbl_isempty(entries) then
 		vim.notify("No TODOs with code locations found.", vim.log.levels.INFO)
 		return
 	end
 
-	vim.ui.select(entries, {
-		prompt = "Select a TODO to jump to:",
-		format_item = function(item)
-			return item.text
+	pickers.new({}, {
+		prompt_title = "Select a TODO to jump to:",
+		finder = finders.new_table({
+			results = entries,
+			entry_maker = function(todo)
+				return {
+					value = todo,
+					display = string.format(
+						"%s:%s | %s",
+						todo.code_location.file_path,
+						todo.code_location.line_number,
+						todo.title
+					),
+					ordinal = todo.title,
+				}
+			end,
+		}),
+		sorter = conf.generic_sorter({}),
+		attach_mappings = function(prompt_bufnr, map)
+			actions.select_default:replace(function()
+				local selection = action_state.get_selected_entry()
+				actions.close(prompt_bufnr)
+				if not selection then return end
+
+				local location = selection.value.code_location
+				local target_path = vim.fn.resolve(vim.fn.fnamemodify(location.file_path, ":p"))
+
+				if vim.fn.filereadable(target_path) == 0 then
+					vim.notify("File not found: " .. target_path, vim.log.levels.ERROR)
+					return
+				end
+
+				vim.cmd("edit " .. target_path)
+				if location.line_number then
+					vim.cmd(tostring(location.line_number))
+				end
+				vim.notify("Jumped to line " .. (location.line_number or "?") .. " in " .. location.file_path, vim.log.levels.INFO)
+			end)
+			return true
 		end,
-	}, function(choice)
-		if not choice then
-			return
-		end
-		local location = choice.value.code_location
-		local target_path = vim.fn.resolve(vim.fn.fnamemodify(location.file_path, ":p"))
-
-		if vim.fn.filereadable(target_path) == 0 then
-			vim.notify("File not found: " .. target_path, vim.log.levels.ERROR)
-			return
-		end
-
-		vim.cmd("e " .. target_path .. " | " .. tostring(location.line_number))
-		vim.notify("Jumped to line " .. location.line_number .. " in " .. location.file_path, vim.log.levels.INFO)
-	end)
+	}):find()
 end
 
---- Setup
----@param user_config NoteConfig
 function M.setup(user_config)
 	config.API_KEY = user_config.API_KEY or config.API_KEY
 	config.base_url = user_config.base_url or config.base_url
 end
 
 return M
+
